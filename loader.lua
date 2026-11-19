@@ -1,64 +1,90 @@
--- loader.lua (Universal Adaptive System)
-local PlaceId = game.PlaceId
-local HttpService = game:GetService("HttpService")
+-- ==========================================
+-- Amin Hub | Global Multi-Game Engine
+-- ==========================================
 
--- 1. تحميل مكتبة الواجهة (WindUI)
 local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
+local RS = game:GetService("ReplicatedStorage")
+local PlaceId = game.PlaceId
 
--- 2. إنشاء النافذة الأساسية
 local Window = WindUI:CreateWindow({
-    Title = "Amin Hub | Universal",
-    SubTitle = "Game ID: " .. PlaceId,
+    Title = "Amin Hub | Global",
+    SubTitle = "Engine Ready",
     Theme = "Dark"
 })
 
--- 3. قاعدة بيانات الميزات (Features Database)
--- هنا نضع الميزات التي تعمل في أي لعبة
-local UniversalFeatures = {
-    -- ميزة الحركة (تعمل في 90% من الألعاب)
-    Speed = function(val)
-        local char = game.Players.LocalPlayer.Character
-        if char and char:FindFirstChild("Humanoid") then
-            char.Humanoid.WalkSpeed = val
-        end
-    end,
+-- 1. قاعدة البيانات العالمية (Global Database)
+-- هنا نضع الأحداث (Remotes) التي نعرفها مسبقاً لكل لعبة
+local GlobalDatabase = {
+    -- لعبة 99 ليلة في الغابة
+    [920587237] = {
+        {Name = "Skip Night", Path = {"RemoteEvents", "RequestActivateNightSkipMachine"}, Args = {}},
+        {Name = "Kill All Monsters", Path = {"RemoteEvents", "RequestDissolveEnemy"}, Args = {"All"}},
+        {Name = "Give Wood", Path = {"RemoteEvents", "RequestAddWood"}, Args = {99999}},
+    },
     
-    -- ميزة الطيران
-    Fly = function(state)
-        -- كود الطيران (يمكنك إضافة كود معقد هنا)
-        print("Fly: " .. tostring(state))
-    end,
+    -- لعبة Blox Fruits (كمثال)
+    [2753915549] = {
+        {Name = "Auto Farm Level", Path = {"Remotes", "CommF_"}, Args = {"AutoFarm"}},
+        {Name = "Kill Aura", Path = {"Remotes", "Combat"}, Args = {"KillAura"}},
+    },
     
-    -- ميزة الرؤية الليلية
-    Fullbright = function(state)
-        game.Lighting.Brightness = state and 3 or 1
-    end
+    -- يمكنك إضافة المزيد من الألعاب هنا...
 }
 
--- 4. بناء التبويبات
-local MainTab = Window:Tab({ Title = "Universal", Icon = "globe" })
-
-MainTab:Slider({
-    Title = "WalkSpeed",
-    Value = { Min = 16, Max = 200, Default = 16 },
-    Callback = UniversalFeatures.Speed
-})
-
-MainTab:Toggle({
-    Title = "Fullbright",
-    Default = false,
-    Callback = UniversalFeatures.Fullbright
-})
-
--- 5. نظام التوجيه للعبة "99 ليلة" (مثال)
-if PlaceId == 920587237 then -- ضع الـ PlaceId الحقيقي هنا
-    local GameTab = Window:Tab({ Title = "99 Nights", Icon = "moon" })
-    GameTab:Button({
-        Title = "Skip Night",
-        Callback = function()
-            game.ReplicatedStorage.RemoteEvents.RequestActivateNightSkipMachine:FireServer()
+-- 2. دالة التنفيذ الذكية
+local function ExecuteSmartFeature(feature)
+    -- نحاول الوصول للحدث عبر المسار المخزن في قاعدة البيانات
+    local currentObj = RS
+    local success = true
+    
+    for _, step in ipairs(feature.Path) do
+        currentObj = currentObj:FindFirstChild(step)
+        if not currentObj then
+            success = false
+            break
         end
-    })
+    end
+    
+    -- إذا وجدنا الحدث، نقوم بتشغيله
+    if success and currentObj then
+        pcall(function()
+            currentObj:FireServer(unpack(feature.Args))
+            WindUI:Notify({Title = "Success", Content = "Executed: " .. feature.Name, Duration = 3})
+        end)
+    else
+        WindUI:Notify({Title = "Error", Content = "Remote not found for this game.", Duration = 3})
+    end
 end
 
-print("✅ Amin Hub Loaded Successfully!")
+-- 3. بناء الواجهة بناءً على قاعدة البيانات
+local GameTab = Window:Tab({ Title = "Game Features", Icon = "gamepad-2" })
+
+-- التحقق مما إذا كانت اللعبة مدعومة
+if GlobalDatabase[PlaceId] then
+    -- اللعبة موجودة في قاعدة البيانات! ننشئ الأزرار تلقائياً
+    for _, feature in ipairs(GlobalDatabase[PlaceId]) do
+        GameTab:Button({
+            Title = feature.Name,
+            Callback = function()
+                ExecuteSmartFeature(feature)
+            end
+        })
+    end
+else
+    -- اللعبة غير موجودة في القاعدة، نستخدم الماسح الضوئي (Scanner) كخطة بديلة
+    GameTab:Paragraph({Title = "Unknown Game", Desc = "Scanning for common remotes..."})
+    
+    -- الماسح الضوئي التلقائي (لأي لعبة أخرى)
+    for _, obj in pairs(RS:GetDescendants()) do
+        if obj:IsA("RemoteEvent") and (string.find(string.lower(obj.Name), "skip") or string.find(string.lower(obj.Name), "give")) then
+            GameTab:Button({
+                Title = obj.Name .. " (Auto)",
+                Callback = function()
+                    obj:FireServer()
+                end
+            })
+        end
+    end
+end
+
+print("✅ Amin Hub Global Engine Loaded!")
