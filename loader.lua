@@ -1,90 +1,59 @@
 -- ==========================================
--- Amin Hub | Global Multi-Game Engine
+-- Amin Hub | Universal Auto-Discovery
 -- ==========================================
 
 local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
 local RS = game:GetService("ReplicatedStorage")
-local PlaceId = game.PlaceId
 
 local Window = WindUI:CreateWindow({
-    Title = "Amin Hub | Global",
-    SubTitle = "Engine Ready",
+    Title = "Amin Hub | Discovery",
+    SubTitle = "Auto Scanning...",
     Theme = "Dark"
 })
 
--- 1. قاعدة البيانات العالمية (Global Database)
--- هنا نضع الأحداث (Remotes) التي نعرفها مسبقاً لكل لعبة
-local GlobalDatabase = {
-    -- لعبة 99 ليلة في الغابة
-    [920587237] = {
-        {Name = "Skip Night", Path = {"RemoteEvents", "RequestActivateNightSkipMachine"}, Args = {}},
-        {Name = "Kill All Monsters", Path = {"RemoteEvents", "RequestDissolveEnemy"}, Args = {"All"}},
-        {Name = "Give Wood", Path = {"RemoteEvents", "RequestAddWood"}, Args = {99999}},
-    },
-    
-    -- لعبة Blox Fruits (كمثال)
-    [2753915549] = {
-        {Name = "Auto Farm Level", Path = {"Remotes", "CommF_"}, Args = {"AutoFarm"}},
-        {Name = "Kill Aura", Path = {"Remotes", "Combat"}, Args = {"KillAura"}},
-    },
-    
-    -- يمكنك إضافة المزيد من الألعاب هنا...
-}
+-- إنشاء تبويب خاص بالاكتشاف التلقائي
+local DiscoveryTab = Window:Tab({ Title = "Discovered Features", Icon = "search" })
 
--- 2. دالة التنفيذ الذكية
-local function ExecuteSmartFeature(feature)
-    -- نحاول الوصول للحدث عبر المسار المخزن في قاعدة البيانات
-    local currentObj = RS
-    local success = true
+-- دالة لإنشاء الأزرار لكل حدث
+local function GenerateDiscoveryButtons()
+    local count = 0
     
-    for _, step in ipairs(feature.Path) do
-        currentObj = currentObj:FindFirstChild(step)
-        if not currentObj then
-            success = false
-            break
-        end
-    end
-    
-    -- إذا وجدنا الحدث، نقوم بتشغيله
-    if success and currentObj then
-        pcall(function()
-            currentObj:FireServer(unpack(feature.Args))
-            WindUI:Notify({Title = "Success", Content = "Executed: " .. feature.Name, Duration = 3})
-        end)
-    else
-        WindUI:Notify({Title = "Error", Content = "Remote not found for this game.", Duration = 3})
-    end
-end
-
--- 3. بناء الواجهة بناءً على قاعدة البيانات
-local GameTab = Window:Tab({ Title = "Game Features", Icon = "gamepad-2" })
-
--- التحقق مما إذا كانت اللعبة مدعومة
-if GlobalDatabase[PlaceId] then
-    -- اللعبة موجودة في قاعدة البيانات! ننشئ الأزرار تلقائياً
-    for _, feature in ipairs(GlobalDatabase[PlaceId]) do
-        GameTab:Button({
-            Title = feature.Name,
-            Callback = function()
-                ExecuteSmartFeature(feature)
-            end
-        })
-    end
-else
-    -- اللعبة غير موجودة في القاعدة، نستخدم الماسح الضوئي (Scanner) كخطة بديلة
-    GameTab:Paragraph({Title = "Unknown Game", Desc = "Scanning for common remotes..."})
-    
-    -- الماسح الضوئي التلقائي (لأي لعبة أخرى)
+    -- البحث في كل مكان داخل ReplicatedStorage
     for _, obj in pairs(RS:GetDescendants()) do
-        if obj:IsA("RemoteEvent") and (string.find(string.lower(obj.Name), "skip") or string.find(string.lower(obj.Name), "give")) then
-            GameTab:Button({
-                Title = obj.Name .. " (Auto)",
+        -- نبحث عن الأحداث (RemoteEvent) فقط
+        if obj:IsA("RemoteEvent") then
+            count = count + 1
+            
+            -- إنشاء زر لكل حدث
+            DiscoveryTab:Button({
+                Title = obj.Name, -- اسم الحدث الحقيقي
                 Callback = function()
+                    -- عند الضغط، نرسل طلباً فارغاً (قد يعمل أو لا)
                     obj:FireServer()
+                    WindUI:Notify({
+                        Title = "Action Sent",
+                        Content = "Triggered: " .. obj.Name,
+                        Duration = 3
+                    })
                 end
             })
+            
+            -- إذا وصلنا إلى 50 زراً، نتوقف لتجنب بطء الهاتف
+            if count >= 50 then
+                break
+            end
         end
+    end
+    
+    -- إذا لم نجد أي شيء
+    if count == 0 then
+        DiscoveryTab:Paragraph({ Title = "No Remotes", Desc = "This game hides its remotes." })
+    else
+        print("✅ Found " .. count .. " Remote Events!")
     end
 end
 
-print("✅ Amin Hub Global Engine Loaded!")
+-- تشغيل المولد
+GenerateDiscoveryButtons()
+
+print("✅ Auto-Discovery Engine Loaded!")
