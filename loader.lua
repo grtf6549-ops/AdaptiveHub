@@ -1,59 +1,56 @@
 -- ==========================================
--- Amin Hub | Universal Auto-Discovery
+-- Amin Hub | Smart Discovery (Auto-Attempt)
 -- ==========================================
 
 local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
 local RS = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
 local Window = WindUI:CreateWindow({
-    Title = "Amin Hub | Discovery",
-    SubTitle = "Auto Scanning...",
+    Title = "Amin Hub | Smart Scan",
+    SubTitle = "Smart Attempt Enabled",
     Theme = "Dark"
 })
 
--- إنشاء تبويب خاص بالاكتشاف التلقائي
 local DiscoveryTab = Window:Tab({ Title = "Discovered Features", Icon = "search" })
 
--- دالة لإنشاء الأزرار لكل حدث
 local function GenerateDiscoveryButtons()
     local count = 0
     
-    -- البحث في كل مكان داخل ReplicatedStorage
     for _, obj in pairs(RS:GetDescendants()) do
-        -- نبحث عن الأحداث (RemoteEvent) فقط
         if obj:IsA("RemoteEvent") then
             count = count + 1
             
-            -- إنشاء زر لكل حدث
             DiscoveryTab:Button({
-                Title = obj.Name, -- اسم الحدث الحقيقي
+                Title = obj.Name,
                 Callback = function()
-                    -- عند الضغط، نرسل طلباً فارغاً (قد يعمل أو لا)
+                    -- [1] المحاولة الأولى: طلب فارغ (الذي جربناه سابقاً)
                     obj:FireServer()
+                    
+                    -- [2] المحاولة الثانية: إرسال اسم اللاعب (لأحداث الطرد أو التفاعل)
+                    obj:FireServer(LocalPlayer.Name)
+                    
+                    -- [3] المحاولة الثالثة: إرسال معرف اللاعب (UserId)
+                    obj:FireServer(LocalPlayer.UserId)
+                    
+                    -- [4] المحاولة الرابعة: إرسال رقم كبير (لأحداث المال أو النقاط)
+                    obj:FireServer(99999)
+                    
+                    -- [5] المحاولة الخامسة: إرسال "true" (لتفعيل الأشياء)
+                    obj:FireServer(true)
+                    
                     WindUI:Notify({
-                        Title = "Action Sent",
-                        Content = "Triggered: " .. obj.Name,
+                        Title = "Smart Attempt",
+                        Content = "Tried 5 different arguments for: " .. obj.Name,
                         Duration = 3
                     })
                 end
             })
             
-            -- إذا وصلنا إلى 50 زراً، نتوقف لتجنب بطء الهاتف
-            if count >= 50 then
-                break
-            end
+            if count >= 30 then break end
         end
-    end
-    
-    -- إذا لم نجد أي شيء
-    if count == 0 then
-        DiscoveryTab:Paragraph({ Title = "No Remotes", Desc = "This game hides its remotes." })
-    else
-        print("✅ Found " .. count .. " Remote Events!")
     end
 end
 
--- تشغيل المولد
 GenerateDiscoveryButtons()
-
-print("✅ Auto-Discovery Engine Loaded!")
