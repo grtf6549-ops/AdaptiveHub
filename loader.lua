@@ -1,171 +1,116 @@
 -- ==========================================
--- Amin Hub | The Ultimate Chaos & Admin Panel
+-- Amin Hub | Ultimate Server Takeover (Attempt)
 -- ==========================================
 
 local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
-local Players = game:GetService("Players")
 local RS = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local SoundService = game:GetService("SoundService")
+local HttpService = game:GetService("HttpService")
 
--- 1. الدخول الفخم (الموسيقى والإشعار)
-local Music = Instance.new("Sound")
-Music.SoundId = "rbxassetid://1837879082" -- موسيقى ملحمية
-Music.Volume = 2
-Music.Looped = true
-Music.Parent = SoundService
-Music:Play()
+local Window = WindUI:CreateWindow({ Title = "Amin Hub | Server Takeover", Theme = "Dark" })
+local AdminTab = Window:Tab({ Title = "Admin Takeover", Icon = "shield" })
+local PlayerTab = Window:Tab({ Title = "Players Info", Icon = "users" })
 
-game:GetService("StarterGui"):SetCore("SendNotification", {
-    Title = "⚠️ HACKER JOINED ⚠️",
-    Text = "Amin Hub | Chaos Edition",
-    Duration = 10
-})
-
--- 2. إنشاء اللوحة
-local Window = WindUI:CreateWindow({ Title = "Amin Hub | Chaos & Admin", Theme = "Dark" })
-local ChaosTab = Window:Tab({ Title = "Griefing (تخريب)", Icon = "skull" })
-local AdminTab = Window:Tab({ Title = "Admin (صلاحيات)", Icon = "shield" })
-local MusicTab = Window:Tab({ Title = "Entrance (دخول)", Icon = "music" })
-
--- ==========================================
--- 3. قسم التخريب (Chaos)
--- ==========================================
-ChaosTab:Button({
-    Title = "🔥 إغراق السيرفر بالرسائل (Spam Chat)",
+-- 1. مسح الأحداث الإدارية (Admin Scanner)
+AdminTab:Button({
+    Title = "1. البحث عن أحداث الأدمن (Scan Admin Events)",
     Callback = function()
-        local ChatEvent = RS:FindFirstChild("DefaultChatSystemChatEvents") and RS.DefaultChatSystemChatEvents:FindFirstChild("SayMessageRequest")
-        if ChatEvent then
-            for i = 1, 50 do
-                ChatEvent:FireServer("Amin Hub is here! 😈", "All")
-                task.wait(0.1)
-            end
-            WindUI:Notify({Title = "Chat Spam", Content = "تم إغراق الشات!", Duration = 3})
-        end
-    end
-})
-
-ChaosTab:Button({
-    Title = "💥 محاولة طرد الجميع (Kick All)",
-    Callback = function()
-        local kickRemote = nil
+        local found = 0
         for _, obj in pairs(RS:GetDescendants()) do
-            if obj:IsA("RemoteEvent") and (string.find(string.lower(obj.Name), "kick") or string.find(string.lower(obj.Name), "remove")) then
-                kickRemote = obj
-                break
-            end
-        end
-        
-        if kickRemote then
-            for _, p in pairs(Players:GetPlayers()) do
-                if p ~= LocalPlayer then
-                    pcall(function()
-                        kickRemote:FireServer(p.Name)
-                        kickRemote:FireServer(p.UserId)
-                    end)
+            if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
+                local name = string.lower(obj.Name)
+                if string.find(name, "admin") or string.find(name, "command") or string.find(name, "kick") or string.find(name, "ban") then
+                    print("🔍 Admin Event Found: " .. obj:GetFullName())
+                    found = found + 1
                 end
             end
-            WindUI:Notify({Title = "Kick Attempt", Content = "تم إرسال طلبات الطرد!", Duration = 3})
-        else
-            WindUI:Notify({Title = "Failed", Content = "لا يوجد حدث طرد متاح.", Duration = 3})
         end
+        WindUI:Notify({Title = "Scan Done", Content = "تم العثور على " .. found .. " حدث إداري.", Duration = 5})
     end
 })
 
-ChaosTab:Button({
-    Title = "🌪️ تحطيم الماب (Destroy Map)",
-    Callback = function()
-        for _, obj in pairs(Workspace:GetChildren()) do
-            if obj:IsA("BasePart") and obj.Name ~= "Baseplate" then
-                obj.Anchored = false
-                obj.CanCollide = false
-                obj.Velocity = Vector3.new(math.random(-100, 100), 100, math.random(-100, 100))
-            end
-        end
-        WindUI:Notify({Title = "Map Destroyed", Content = "تم تخريب الماب (محلياً).", Duration = 3})
-    end
-})
-
--- ==========================================
--- 4. قسم الصلاحيات (Admin)
--- ==========================================
-AdminTab:Paragraph({ Title = "تحذير", Desc = "هذه الأدوات تحاول انتحال صلاحيات الأدمن. قد تؤدي لطردك." })
-
+-- 2. محاولة "انتحال" صلاحيات المطور (Developer Spoofing)
 AdminTab:Button({
-    Title = "1. انتحال اسم أدمن (Spoof Name)",
+    Title = "2. محاولة انتحال المطور (Spoof Dev)",
     Callback = function()
-        local adminNames = {"Admin", "Owner", "Creator"}
-        for _, name in pairs(adminNames) do
-            pcall(function() LocalPlayer.Name = name end)
-        end
-        WindUI:Notify({Title = "Spoofed", Content = "تم تغيير الاسم محلياً.", Duration = 3})
-    end
-})
-
-AdminTab:Button({
-    Title = "2. إرسال طلب أدمن مزيف (Fake Request)",
-    Callback = function()
-        local adminRemote = nil
+        -- البحث عن أي حدث يخص الصلاحيات
+        local adminEvents = {}
         for _, obj in pairs(RS:GetDescendants()) do
             if obj:IsA("RemoteEvent") and (string.find(string.lower(obj.Name), "admin") or string.find(string.lower(obj.Name), "command")) then
-                adminRemote = obj
+                table.insert(adminEvents, obj)
+            end
+        end
+        
+        -- إرسال طلبات مختلفة لكل حدث
+        for _, ev in pairs(adminEvents) do
+            pcall(function()
+                ev:FireServer("give_admin", LocalPlayer.UserId)
+                ev:FireServer("set_rank", LocalPlayer.UserId, "Owner")
+                ev:FireServer("I am owner")
+            end)
+        end
+        WindUI:Notify({Title = "Attempted", Content = "تم إرسال طلبات انتحال الصلاحيات.", Duration = 3})
+    end
+})
+
+-- 3. جمع معلومات اللاعبين (Player Info Collector)
+-- هذا الجزء يجمع الأسماء والصور (Avatars) لكل اللاعبين
+PlayerTab:Button({
+    Title = "جمع معلومات اللاعبين (Collect Players Info)",
+    Callback = function()
+        print("=== معلومات اللاعبين في السيرفر ===")
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer then
+                -- الحصول على صورة اللاعب
+                local avatarUrl = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. p.UserId .. "&width=150&height=150&format=png"
+                print("👤 الاسم: " .. p.Name)
+                print("🆔 المعرف: " .. p.UserId)
+                print("🖼️ الصورة: " .. avatarUrl)
+                print("-------------------------")
+            end
+        end
+        WindUI:Notify({Title = "Info Collected", Content = "تم طباعة معلومات اللاعبين في الكونسول.", Duration = 5})
+    end
+})
+
+-- 4. محاولة طرد لاعب محدد (Kick Specific Player)
+local targetName = ""
+PlayerTab:Input({
+    Title = "اسم اللاعب المراد طرده",
+    Default = "",
+    Callback = function(text) targetName = text end
+})
+
+PlayerTab:Button({
+    Title = "محاولة طرد اللاعب (Try Kick)",
+    Callback = function()
+        if targetName == "" then return end
+        
+        -- البحث عن حدث الطرد
+        local kickEvent = nil
+        for _, obj in pairs(RS:GetDescendants()) do
+            if obj:IsA("RemoteEvent") and string.find(string.lower(obj.Name), "kick") then
+                kickEvent = obj
                 break
             end
         end
         
-        if adminRemote then
-            adminRemote:FireServer("give_admin", LocalPlayer.UserId)
-            adminRemote:FireServer("set_rank", LocalPlayer.UserId, "Owner")
-            WindUI:Notify({Title = "Request Sent", Content = "تم إرسال طلب الصلاحيات.", Duration = 3})
-        else
-            WindUI:Notify({Title = "Failed", Content = "لا يوجد حدث إداري متاح.", Duration = 3})
-        end
-    end
-})
-
-AdminTab:Button({
-    Title = "3. سرقة توكن (Steal Token)",
-    Callback = function()
-        local success = pcall(function()
-            local playerScripts = LocalPlayer:FindFirstChild("PlayerScripts")
-            if playerScripts then
-                for _, obj in pairs(playerScripts:GetDescendants()) do
-                    if obj:IsA("StringValue") and string.find(string.lower(obj.Name), "token") then
-                        print("🔑 Token Found: " .. obj.Value)
-                        local remote = RS:FindFirstChild("Remotes") and RS.Remotes:FindFirstChild("VerifyToken")
-                        if remote then remote:FireServer(obj.Value) end
-                    end
-                end
+        if kickEvent then
+            local target = Players:FindFirstChild(targetName)
+            if target then
+                pcall(function()
+                    kickEvent:FireServer(target.UserId)
+                    kickEvent:FireServer(target.Name)
+                end)
+                WindUI:Notify({Title = "Attempted", Content = "تم إرسال طلب طرد " .. targetName, Duration = 3})
+            else
+                WindUI:Notify({Title = "Error", Content = "اللاعب غير موجود.", Duration = 3})
             end
-        end)
-        if not success then
-            WindUI:Notify({Title = "Failed", Content = "لم يتم العثور على توكن.", Duration = 3})
+        else
+            WindUI:Notify({Title = "Error", Content = "لا يوجد حدث طرد.", Duration = 3})
         end
     end
 })
 
--- ==========================================
--- 5. قسم الدخول (Entrance)
--- ==========================================
-MusicTab:Button({
-    Title = "▶️ تشغيل الموسيقى",
-    Callback = function() Music:Play() end
-})
-
-MusicTab:Button({
-    Title = "⏹️ إيقاف الموسيقى",
-    Callback = function() Music:Stop() end
-})
-
-MusicTab:Button({
-    Title = "💀 إرسال رسالة دخول للجميع",
-    Callback = function()
-        local ChatEvent = RS:FindFirstChild("DefaultChatSystemChatEvents") and RS.DefaultChatSystemChatEvents:FindFirstChild("SayMessageRequest")
-        if ChatEvent then
-            ChatEvent:FireServer("⚠️ HACKER AMIN HAS ARRIVED ⚠️", "All")
-        end
-    end
-})
-
-print("✅ Ultimate Chaos & Admin Panel Loaded!")
+print("✅ Server Takeover Module Loaded!")
