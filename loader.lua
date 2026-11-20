@@ -1,80 +1,123 @@
 -- ==========================================
--- Amin Hub | Ultimate Spy & Action Panel
+-- Amin Hub | Data Manipulator (Based on Spy)
 -- ==========================================
 
 local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
 local RS = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
 
 local Window = WindUI:CreateWindow({
-    Title = "Amin Hub | Master Control",
-    SubTitle = "Spy & Execute",
+    Title = "Amin Hub | God Mode",
+    SubTitle = "Data Injection Ready",
     Theme = "Dark"
 })
 
--- 1. تبويب التجسس (لاكتشاف الأسرار)
-local SpyTab = Window:Tab({ Title = "1. Spy (تجسس)", Icon = "eye" })
-SpyTab:Button({
-    Title = "تشغيل أداة Cobalt",
-    Callback = function()
-        loadstring(game:HttpGet("https://gitlab.com/upio/cobalt/-/releases/permalink/latest/downloads/Cobalt.luau"))()
-    end
-})
+local HackTab = Window:Tab({ Title = "God Mode", Icon = "shield" })
 
--- 2. تبويب التنفيذ اليدوي (الذي تضع فيه ما اكتشفته)
-local ExecTab = Window:Tab({ Title = "2. Execute (تنفيذ)", Icon = "zap" })
-
--- هنا تضع الأزرار التي تريدها، بناءً على ما تراه في أداة التجسس
-ExecTab:Button({
-    Title = "Kill All (طرد/قتل الجميع)",
+-- 1. زر إعطاء الذهب اللانهائي (بناءً على الكود الثالث)
+HackTab:Button({
+    Title = "Give Infinite Gold & Levels (إعطاء ذهب ومستويات)",
     Callback = function()
-        -- افترض أنك اكتشفت من أداة التجسس أن مسار القتل هو هذا:
-        local remote = RS:FindFirstChild("Remotes") and RS.Remotes:FindFirstChild("KillPlayer")
-        if remote then
-            for _, p in pairs(game.Players:GetPlayers()) do
-                if p ~= game.Players.LocalPlayer then
-                    remote:FireServer(p) -- إرسال اللاعب كقيمة
-                end
-            end
+        local Event = RS:FindFirstChild("Remotes") and RS.Remotes:FindFirstChild("Send")
+        if not Event then
+            WindUI:Notify({Title = "Error", Content = "لم يتم العثور على الحدث Remotes.Send", Duration = 3})
+            return
+        end
+
+        -- البيانات المعدلة (قمت بتغيير الأرقام لقيم ضخمة)
+        local HackedData = {
+            ["Bouncy Bird"] = {
+                difficulty = 999,
+                high_score = { 999999, 999999, 999999 }
+            },
+            ["Stacking Blocks"] = {
+                highscore = 999999
+            },
+            ["Pocket Cookies"] = {
+                Factory_level = 999,
+                SpaceStation_level = 999,
+                multiplier = 999,
+                cookies = 999999999, -- كوكيز لا نهائية
+                Clicker_level = 999,
+                Bakery_level = 999,
+                CookiePlanet_level = 999,
+                Grandma_level = 999,
+                rate = 999999
+            },
+            ["Balloon Game"] = {
+                PopBalloon_level = 999,
+                upgrades = {
+                    Rate = 999,
+                    Auto = 999
+                },
+                HotBalloon_level = 999,
+                Hot2Balloon_level = 999,
+                DogBalloon_level = 999,
+                ManyBalloon_level = 999,
+                ["Balloon Factory_level"] = 999,
+                ["Auto Popper_level"] = 999,
+                WeirdBalloon_level = 999,
+                ["Bigger Balloons_level"] = 999,
+                ["Quality Balloons_level"] = 999,
+                cosmetics = {
+                    Balloon = 1
+                },
+                ["Heavier Balloons_level"] = 999,
+                StareBalloon_level = 999,
+                pops = 999999,
+                HeartBalloon_level = 999,
+                multiplier = 999,
+                ["Balloon Rate_level"] = 999,
+                ZepellinBalloon_level = 999
+            },
+            ["Monster Slayer"] = {
+                Fireball_level = 999,
+                ["Poison Gas_level"] = 999,
+                multiplier = 999,
+                ["Level Up_level"] = 999,
+                ["Auto Attack_level"] = 999,
+                kill_count = 999999,
+                Execution_level = 999,
+                Damage_level = 999,
+                gold = 999999999, -- الذهب هنا!
+                ["Lightning Storm_level"] = 999,
+                level = 999,
+                current_monster = "Slime King",
+                damage = 999999
+            }
+        }
+
+        -- إرسال البيانات المخترقة للسيرفر
+        local success, err = pcall(function()
+            Event:FireServer(24, "games_save", HackedData)
+        end)
+
+        if success then
+            WindUI:Notify({
+                Title = "Injection Successful!",
+                Content = "تم إرسال البيانات المخترقة. اذهب وتفقد ألعابك!",
+                Duration = 5
+            })
         else
-            WindUI:Notify({Title = "Error", Content = "Remote not found!", Duration = 3})
+            WindUI:Notify({
+                Title = "Injection Failed",
+                Content = "السيرفر رفض البيانات.",
+                Duration = 5
+            })
         end
     end
 })
 
-ExecTab:Button({
-    Title = "Give Money (إعطاء مال)",
+-- 2. زر تفعيل الهاتف (الكود الثاني)
+HackTab:Button({
+    Title = "Force Holding Phone (إجبار حمل الهاتف)",
     Callback = function()
-        -- افترض أنك اكتشفت المسار والقيمة
-        local remote = RS:FindFirstChild("Remotes") and RS.Remotes:FindFirstChild("GiveMoney")
-        if remote then
-            remote:FireServer(999999) -- إرسال الرقم
-        else
-            WindUI:Notify({Title = "Error", Content = "Remote not found!", Duration = 3})
+        local Event = RS:FindFirstChild("Remotes") and RS.Remotes:FindFirstChild("Send")
+        if Event then
+            Event:FireServer(13, "holding_phone", true)
+            WindUI:Notify({Title = "Success", Content = "تم تفعيل حمل الهاتف.", Duration = 3})
         end
     end
 })
 
--- 3. تبويب المسح التلقائي (لتصنيف ما تم اكتشافه)
-local ScanTab = Window:Tab({ Title = "3. Auto Scan (مسح)", Icon = "search" })
-ScanTab:Button({
-    Title = "مسح كل الأحداث",
-    Callback = function()
-        local count = 0
-        for _, obj in pairs(RS:GetDescendants()) do
-            if obj:IsA("RemoteEvent") then
-                count = count + 1
-                -- نصنع زراً لكل حدث (بدون قيمة سرية، فقط طلب فارغ)
-                ScanTab:Button({
-                    Title = obj.Name,
-                    Callback = function()
-                        obj:FireServer() -- طلب فارغ
-                        WindUI:Notify({Title = "Fired", Content = obj.Name, Duration = 2})
-                    end
-                })
-            end
-        end
-        WindUI:Notify({Title = "Scan Done", Content = "وجدت " .. count .. " حدث", Duration = 5})
-    end
-})
-
-print("✅ Master Control Ready!")
+print("✅ God Mode Loaded!")
