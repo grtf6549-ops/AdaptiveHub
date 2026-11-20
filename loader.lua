@@ -1,54 +1,41 @@
 -- ==========================================
--- Amin Hub | Smart Data Injection v2
+-- Amin Hub | Live Code Injector
 -- ==========================================
 
 local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
-local RS = game:GetService("ReplicatedStorage")
+local Window = WindUI:CreateWindow({ Title = "Amin Hub | Injector", Theme = "Dark" })
 
-local Window = WindUI:CreateWindow({
-    Title = "Amin Hub | Data Injector",
-    SubTitle = "Auto-Testing Values...",
-    Theme = "Dark"
+local InjectTab = Window:Tab({ Title = "Code Injector", Icon = "code" })
+
+-- 1. صندوق نصي (TextArea) للصق الكود
+local CodeInput = ""
+InjectTab:Input({
+    Title = "الصق الكود هنا (Paste Code)",
+    Default = "",
+    Placeholder = "local Event = ...",
+    Callback = function(Text)
+        CodeInput = Text
+    end
 })
 
-local InjectTab = Window:Tab({ Title = "Injector", Icon = "zap" })
-
+-- 2. زر التنفيذ
 InjectTab:Button({
-    Title = "محاولة إعطاء الذهب (Try Give Gold)",
+    Title = "تنفيذ الكود (Execute)",
     Callback = function()
-        local Event = RS:FindFirstChild("Remotes") and RS.Remotes:FindFirstChild("Send")
-        if not Event then
-            WindUI:Notify({Title = "Error", Content = "لم يتم العثور على الحدث Send", Duration = 3})
+        if CodeInput == "" then
+            WindUI:Notify({Title = "Error", Content = "الصندوق فارغ! الصق الكود أولاً.", Duration = 3})
             return
         end
-
-        -- محاولة إرسال البيانات بطرق مختلفة
-        -- 1. الطريقة القديمة (التي جربتها)
-        Event:FireServer(24, "games_save", { ["Monster Slayer"] = { gold = 999999 } })
         
-        -- 2. الطريقة الجديدة: إرسال الأرقام فقط
-        Event:FireServer(24, "gold", 999999)
+        -- محاولة تشغيل الكود الذي لصقته
+        local success, err = pcall(function()
+            loadstring(CodeInput)() -- هنا يتم تنفيذ الكود المعدل!
+        end)
         
-        -- 3. إرسال النص فقط
-        Event:FireServer("give_gold", 999999)
-        
-        -- 4. إرسال جدول بسيط
-        Event:FireServer({ type = "save", gold = 999999 })
-
-        WindUI:Notify({
-            Title = "Attempted",
-            Content = "تم إرسال 4 محاولات مختلفة. راقب اللعبة!",
-            Duration = 5
-        })
+        if success then
+            WindUI:Notify({Title = "Success", Content = "تم تنفيذ الكود بنجاح!", Duration = 3})
+        else
+            WindUI:Notify({Title = "Error", Content = "فشل التنفيذ: " .. tostring(err), Duration = 5})
+        end
     end
 })
-
--- دالة لمراقبة الأحداث (للتجسس المباشر)
-InjectTab:Button({
-    Title = "تشغيل أداة التجسس (Cobalt)",
-    Callback = function()
-        loadstring(game:HttpGet("https://gitlab.com/upio/cobalt/-/releases/permalink/latest/downloads/Cobalt.luau"))()
-    end
-})
-
-print("✅ Smart Injector Ready!")
